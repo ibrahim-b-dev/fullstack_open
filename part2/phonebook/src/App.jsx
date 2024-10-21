@@ -1,9 +1,9 @@
-import axios from 'axios'
 import { useState, useEffect } from 'react'
 
 import Filter from './components/Filter'
 import PersonForm from './components/PersonForm'
 import Persons from './components/Persons'
+import Notification from './components/Notification'
 
 import personService from './services/persons'
 
@@ -12,6 +12,8 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [filter, setFilter] = useState('')
+  const [message, setMessage] = useState(null)
+  const [state, setState] = useState(true)
 
   useEffect(() => {
     personService
@@ -62,6 +64,14 @@ const App = () => {
           setPersons(updatedPersons.concat(returnedObject))
           setNewName("")
           setNewNumber("")
+
+          setMessage(`number ${person.number} updated to ${updatedPerson.number}`)
+          setState(true)
+
+          setTimeout(() => {
+            setMessage(null)
+            setState(false)
+          }, 3000)
         })
         .catch(error => {
           console.log(error.response)
@@ -92,6 +102,14 @@ const App = () => {
         setPersons(persons.concat(returnedObject))
         setNewName("")
         setNewNumber("")
+
+        setMessage(`Added ${returnedObject.name}`)
+        setState(true)
+
+        setTimeout(() => {
+          setMessage(null)
+          setState(false)
+        }, 3000)
       })
     }
   }
@@ -101,6 +119,8 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={message} state={state}/>
+      {/* <Notification message="tessdf54 t" state={false} /> */}
       <Filter filter={filter} handleChange={handleFilterChange}/>
       
       <h2>add a new</h2>
