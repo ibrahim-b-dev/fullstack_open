@@ -1,9 +1,11 @@
 import axios from 'axios'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+
 import Filter from './components/Filter'
 import PersonForm from './components/PersonForm'
 import Persons from './components/Persons'
-import { useEffect } from 'react'
+
+import personService from './services/persons'
 
 const App = () => {
   const [persons, setPersons] = useState([]) 
@@ -12,13 +14,9 @@ const App = () => {
   const [filter, setFilter] = useState('')
 
   useEffect(() => {
-    axios
-      .get("http://localhost:3001/persons")
-      .then(response => {
-        console.log("promise fullfiled");
-        console.log(response.data)
-        setPersons(response.data)
-      })
+    personService
+      .getAll()
+      .then(initPersons => setPersons(initPersons))
   }, [])
 
   const handleNameChange = (event) => {
@@ -33,6 +31,44 @@ const App = () => {
     setFilter(event.target.value)
   }
 
+  const handleDelete = (id) => {
+    const deletedPerson = persons.find(p => p.id === id)
+    
+    const confirmDelete = confirm(`Delete ${deletedPerson.name}?`)
+    
+    if (confirmDelete) {
+      personService
+      .remove(id)
+      .then(response => {
+          setPersons(persons.filter(p => p.id !== id))
+        })
+    }
+  }
+
+  const updatePersonNumber = (person) => {
+    const confirmUpdate = confirm(`${person.name} is already added to phonebook, replace the old number with a new one?`)
+
+    if (confirmUpdate) {
+      const updatedPerson = {
+        ...person,
+        number: newNumber
+      }
+
+      personService
+        .update(updatedPerson.id, updatedPerson)
+        .then(returnedObject => {
+          const updatedPersons = persons.filter(p => p.id !== updatedPerson.id)
+          
+          setPersons(updatedPersons.concat(returnedObject))
+          setNewName("")
+          setNewNumber("")
+        })
+        .catch(error => {
+          console.log(error.response)
+        })
+    }
+  }
+
   const addName = (event) => {
     event.preventDefault();
 
@@ -43,18 +79,21 @@ const App = () => {
     const found = persons.find(n => n.name === newName)
 
     if (found) {
-      alert(`${newName} is already added to phonebook`)
-      return
+      updatePersonNumber(found)
+    } else {
+      const newObject = {
+        name: newName,
+        number: newNumber
+      }
+      
+      personService
+      .create(newObject)
+      .then(returnedObject => {
+        setPersons(persons.concat(returnedObject))
+        setNewName("")
+        setNewNumber("")
+      })
     }
-
-    const newState = persons.concat({
-      name: newName,
-      number: newNumber
-    })
-
-    setPersons(newState)
-    setNewName("")
-    setNewNumber("")
   }
 
   const filteredPersons = persons.filter(person => person.name.includes(filter))
@@ -74,7 +113,7 @@ const App = () => {
       />
 
       <h2>Numbers</h2>
-      <Persons persons={filteredPersons} />
+      <Persons persons={filteredPersons} deletePerson={handleDelete}/>
     </div>
   )
 }
