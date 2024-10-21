@@ -74,7 +74,18 @@ const App = () => {
           }, 3000)
         })
         .catch(error => {
-          console.log(error.response)
+          const updatedPersons = persons.filter(p => p.id !== updatedPerson.id)
+          setPersons(updatedPersons)
+          setMessage(`information of ${person.name} has already been removed from server`)
+          setState(false)
+          setNewName("")
+          setNewNumber("")
+          
+          setTimeout(() => {
+            setMessage(null)
+            setState(true)
+          }, 3000)
+          console.log(error)
         })
     }
   }
@@ -120,7 +131,6 @@ const App = () => {
     <div>
       <h2>Phonebook</h2>
       <Notification message={message} state={state}/>
-      {/* <Notification message="tessdf54 t" state={false} /> */}
       <Filter filter={filter} handleChange={handleFilterChange}/>
       
       <h2>add a new</h2>
